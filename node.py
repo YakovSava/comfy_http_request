@@ -1,8 +1,10 @@
-from PIL import Image, ImageOps
-from io import BytesIO
-import numpy as np
-import requests
 import time
+import base64
+import requests
+import numpy as np
+
+from io import BytesIO
+from PIL import Image, ImageOps
 
 #You can use this node to save full size images through the websocket, the
 #images will be sent in exactly the same format as the image previews: as
@@ -32,7 +34,10 @@ class SendHttpRequest:
         for image in images:
             i = 255. * image.cpu().numpy()
             img = Image.fromarray(np.clip(i, 0, 255).astype(np.uint8))
-            requests.post(url,data=img)
+            rawBytes = BytesIO()
+            img.save(rawBytes, "PNG")
+            rawBytes.seek(0)
+            requests.post(url,data={'img': base64.b64encode(rawBytes.read()).decode('utf-8')})
             step += 1
 
         return {}
